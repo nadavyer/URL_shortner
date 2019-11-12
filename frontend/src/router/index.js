@@ -11,7 +11,7 @@ const routes = [
     component: Home,
   },
   {
-    path: '/statistics',
+    path: '/routes/statistics',
     name: 'statistics',
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route

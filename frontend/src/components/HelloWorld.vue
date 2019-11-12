@@ -7,16 +7,17 @@
     </p>-->
     <form @submit.prevent="handleUrl">
       <label>
-        <input type="longUrl" v-model="longUrl" placeholder="pase your long URL here..." />
+        <input type="longUrl" v-model="longUrl" placeholder="paste your URL here.." />
       </label>
-
       <button>Make it shorter!</button>
     </form>
-    <h3>Essential Links</h3>
+    <p>Shortened URL: <a :href="res">{{ res }}</a></p>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'HelloWorld',
   props: {
@@ -25,11 +26,34 @@ export default {
   data() {
     return {
       longUrl: '',
+      res: '',
     };
   },
   methods: {
+    validURL(str) {
+      const pattern = new RegExp('^(https?:\\/\\/)?'
+      + '((\\d{1,3}\\.){3}\\d{1,3}))'// OR ip (v4) address
+      + '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' // port and path
+      + '(\\?[;&a-z\\d%_.~+=-]*)?'// query string
+      + '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+      return !!pattern.test(str);
+    },
     handleUrl() {
-      console.log(this.longUrl);
+      const path = 'http://localhost:5000/api/shorten';
+      axios({
+        method: 'post',
+        url: path,
+        data: {
+          longUrl: this.longUrl,
+        },
+      })
+        .then((response) => {
+          // console.log(response.data);
+          this.res = response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
   },
 };
