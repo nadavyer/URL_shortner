@@ -1,4 +1,4 @@
-#!/home/nadav/url_shortner/backend/venv/bin/python2
+#!/home/nadav/url_shortner/backend/venv/bin/python3
 
 # -*- coding: utf-8 -*-
 import re

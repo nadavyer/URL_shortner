@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, abort
 import requests
 from flask_cors import CORS
 import string
@@ -48,14 +48,19 @@ def shorten_url():
     code_url = gen_code(long_url)
     db[code_url] = long_url
 
-    print long_url
+    print(long_url)
     print(request_json)
     # print long_url
-    return jsonify('hi from server!!')
+    return jsonify('http://localhost:5000/' + code_url)
 
 @app.route('/<short_url>')
 def get_long_url(short_url):
-    return 'long_url'
+    if short_url not in db:
+        return  abort(404)
+    
+    ret = db[short_url] if db[short_url][:5] == "http" else f"http://{db[short_url]}"
+    return redirect(ret, code=302)
+    # return db.get(short_url, "ERROR")
 
 
 
