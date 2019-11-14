@@ -4,5 +4,6 @@ backend/__pycache__
 backend/venv
 backend/db.sqlite3
 backend/url-shortner
+frontend/url-shortner
 .vscode
 **/*.pyc

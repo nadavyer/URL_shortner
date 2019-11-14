@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date, time, timedelta
 from sqlalchemy import func
 
 from utils import gen_code_for_long_url
@@ -15,7 +15,7 @@ class Url(db.Model):
 class Redirects(db.Model):
     index = db.Column(db.Integer, primary_key = True, autoincrement = True)
     stat = db.Column(db.String, nullable = False)
-    time_stamp = db.Column(db.DateTime, default=datetime.utcnow)
+    time_stamp = db.Column(db.DateTime, default=datetime.now())
 
 
 class Submmit:
@@ -48,12 +48,38 @@ class Query:
         return db.session.query(func.count(Redirects.stat)).filter(Redirects.stat == 'good').scalar()
 
     @staticmethod
-    def get_all_redirects_from_today(db):
-        return db.session.query(Redirects).filter(func.date(Redirects.time_stamp) == date.today()).all()
+    def get_all_good_redirects_from_today(db):
+        return db.session.query(func.count(Redirects.stat)).filter(func.date(Redirects.time_stamp) == date.today(),
+                                                                     Redirects.stat == 'good').scalar()
         
     @staticmethod
-    def get_all_redirects_from_hour():
-        pass
+    def count_all_bad_redirects_from_today(db):
+        return db.session.query(func.count(Redirects.stat)).filter(func.date(Redirects.time_stamp) == date.today(),
+                                                                     Redirects.stat == 'bad').scalar()
+
+    @staticmethod
+    def get_all_good_redirects_from_hour(db):
+        since = datetime.now() - timedelta(hours=1)
+        return db.session.query(func.count(Redirects.stat)).filter(Redirects.time_stamp >= since,
+                                                                     Redirects.stat == 'good').scalar()
+    
+    @staticmethod
+    def get_all_bad_redirects_from_hour(db):
+        since = datetime.now() - timedelta(hours=1)
+        return db.session.query(func.count(Redirects.stat)).filter(Redirects.time_stamp >= since,
+                                                                     Redirects.stat == 'bad').scalar()
+
+    @staticmethod
+    def get_all_good_redirects_from_minute(db):
+        since = datetime.now() - timedelta(minutes=1)
+        return db.session.query(func.count(Redirects.stat)).filter(Redirects.time_stamp >= since,
+                                                                     Redirects.stat == 'good').scalar()
+    @staticmethod
+    def get_all_bad_redirects_from_minute(db):
+        since = datetime.now() - timedelta(minutes=1)
+        return db.session.query(func.count(Redirects.stat)).filter(Redirects.time_stamp >= since,
+                                                                    Redirects.stat == 'bad').scalar()
+    
 
     @staticmethod
     def long_from_short(short_url):

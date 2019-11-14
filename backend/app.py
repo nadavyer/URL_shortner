@@ -47,7 +47,17 @@ def shorten_url():
 
 @app.route('/api/stats', methods = ['GET'])
 def send_stats_from_db():
-    return jsonify(Query.count_all_directories(db))
+    statistics = {
+        "all_count": Query.count_all_directories(db),
+        "all_good_today": Query.get_all_good_redirects_from_today(db),
+         "all_good_today": Query.count_all_bad_redirects_from_today(db),
+         "all_good_hour": Query.get_all_good_redirects_from_hour(db), 
+         "all_bad_hour": Query.get_all_bad_redirects_from_hour(db), 
+         "all_good_minute": Query.get_all_good_redirects_from_minute(db), 
+         "all_bad_minute": Query.get_all_bad_redirects_from_minute(db) 
+        }
+
+    return jsonify(statistics)
 
 @app.route('/<short_url>')
 def get_long_url(short_url):
