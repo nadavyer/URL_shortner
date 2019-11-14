@@ -1,76 +1,30 @@
+import requests
+import json
+
+from datetime import date
+from sqlalchemy import cast, Date, Time, TIME
 from flask import Flask, render_template, jsonify, request, redirect, abort, session
 from flask_cors import CORS
-from random import choice
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, date
-from sqlalchemy import cast, Date, func, Time, TIME
-from alch_encoder import AlchemyEncoder
-import requests
-import string
-import json
-import validators
+
+from models import db, Query, Url, Redirects, Submmit, unique_code
+from utils import validate_url, long_url_from_request
 
 
-
-    
-app = Flask(__name__,
+def create_app(db):
+    app = Flask(__name__,
             static_folder = "../frontend/dist/static",
             template_folder = "../frontend/dist")
-cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-  
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 
-db = SQLAlchemy(app)
-db.create_all()
+    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+    db.init_app(app)
+    db.create_all(app=app)
+    return app
 
-
-class Url(db.Model):
-    code_url = db.Column(db.String(10), primary_key = True)
-    long_url = db.Column(db.Text, nullable = False)
-
-
-
-class Redirects(db.Model):
-    index = db.Column(db.Integer, primary_key = True, autoincrement = True)
-    stat = db.Column(db.String, nullable = False)
-    time_stamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-
-
-
-def count_all_directories():
-    return db.session.query(func.count(Redirects.stat)).filter(Redirects.stat == 'good').scalar()
-
-def get_all_redirects_from_today():
-    return db.session.query(Redirects).filter(func.date(Redirects.time_stamp) == date.today()).all()
-
-def get_all_redirects_from_hour():
-    pass
-
-def gen_code_for_long_url(long_url): 
-    chars = string.ascii_letters + string.digits
-    length = 5
-    code = ''.join(choice(chars) for x in range(length))
-    exist = db.session.query(
-        db.exists().where(Url.code_url == code)).scalar()
-    if not exist:
-        return code
-    code = gen_code_for_long_url(long_url)
-
-def validate_url(long_url):
-    return validators.url(long_url)
-
-def prepare_for_url_validation(long_url):
-    long_url_7_prefix = long_url[:7]
-    long_url_8_prefix = long_url[:8]
-    if long_url_7_prefix == 'http://' or long_url_8_prefix == 'https://':
-        return long_url
-    return 'http://' + long_url
-    
-
+app = create_app(db)
 
 
 @app.route('/')
@@ -79,35 +33,30 @@ def index():
 
 @app.route('/api/shorten', methods = ['POST'])
 def shorten_url():
-    request_json = request.json
-    long_url = request_json['longUrl']
-    long_url = prepare_for_url_validation(long_url)
-    if not validate_url(long_url):
-        bad_request = Redirects(stat = 'bad')
-        db.session.add(bad_request)
-        db.session.commit()
+    long_url = long_url_from_request(request)
+    validated_url = validate_url(long_url) 
+
+    if not validated_url: 
+        Submmit.add_bad_redirect(db)
         return jsonify('Not a valid URL')
-    code_url = gen_code_for_long_url(long_url)
-    url_to_db = Url(code_url = code_url, long_url = long_url)
-    db.session.add(url_to_db)
-    db.session.commit()
-    return jsonify('http://localhost:5000/' + code_url)
+
+    code = unique_code(db, validate_url)
+    Submmit.long_short(db, code, validated_url)
+
+    return  jsonify('http://localhost:5000/' + code)
 
 @app.route('/api/stats', methods = ['GET'])
 def send_stats_from_db():
-    return jsonify(count_all_directories())
+    return jsonify(Query.count_all_directories(db))
 
 @app.route('/<short_url>')
 def get_long_url(short_url):
-    exist = db.session.query(
-        db.exists().where(Url.code_url == short_url)).scalar()
-    if not exist:
-        return  abort(404)
-    ret  = db.session.query(Url).filter_by(code_url = short_url).first().long_url
-    redirect_entry = Redirects( stat = 'good')
-    db.session.add(redirect_entry)
-    db.session.commit()
-    return redirect(ret, code=302)
+    long_url = Query.long_from_short(short_url)
+    if not long_url:
+        return  abort(404)        
+    
+    Submmit.add_successfull_redirect(db)
+    return redirect(long_url, code=302)
 
 
 if __name__ == '__main__':
