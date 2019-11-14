@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "backend/venv/bin/python3",
-    "python.linting.enabled": true,
-    "python.formatting.provider": "black"
-}
