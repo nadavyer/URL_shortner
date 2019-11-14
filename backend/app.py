@@ -4,6 +4,7 @@ from random import choice
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
 from sqlalchemy import cast, Date, func, Time, TIME
+from alch_encoder import AlchemyEncoder
 import requests
 import string
 import json
@@ -22,10 +23,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 
 db = SQLAlchemy(app)
+db.create_all()
+
+
 
 class Url(db.Model):
     code_url = db.Column(db.String(10), primary_key = True)
     long_url = db.Column(db.Text, nullable = False)
+
+
 
 class Redirects(db.Model):
     index = db.Column(db.Integer, primary_key = True, autoincrement = True)
@@ -34,26 +40,15 @@ class Redirects(db.Model):
 
 
 
-db.create_all()
 
-def show_all_redirects():
-    return jsonify(db.session.query(Redirects).filter(Redirects.stat == 'good').all())
+def count_all_directories():
+    return db.session.query(func.count(Redirects.stat)).filter(Redirects.stat == 'good').scalar()
 
 def get_all_redirects_from_today():
     return db.session.query(Redirects).filter(func.date(Redirects.time_stamp) == date.today()).all()
 
-
 def get_all_redirects_from_hour():
-    return db.session.query(Redirects).filter(cast(Redirects.time_stamp, Time) == Time.today()).all()
-    func.current
-
-
-def get_all_redirects_from_hour():
-    test1 = datetime.now().date()
-    test2 = date.today()
-    date_from_data = cast(Redirects.time_stamp, Date)
-    as_func = func.date(Redirects.time_stamp)
-    return db.session.query(Redirects).filter(func.date(Redirects.time_stamp) == date.today()).all()
+    pass
 
 def gen_code_for_long_url(long_url): 
     chars = string.ascii_letters + string.digits
@@ -65,7 +60,6 @@ def gen_code_for_long_url(long_url):
         return code
     code = gen_code_for_long_url(long_url)
 
-
 def validate_url(long_url):
     return validators.url(long_url)
 
@@ -75,6 +69,7 @@ def prepare_for_url_validation(long_url):
     if long_url_7_prefix == 'http://' or long_url_8_prefix == 'https://':
         return long_url
     return 'http://' + long_url
+    
 
 
 
@@ -100,7 +95,7 @@ def shorten_url():
 
 @app.route('/api/stats', methods = ['GET'])
 def send_stats_from_db():
-    return jsonify(show_all_redirects())
+    return jsonify(count_all_directories())
 
 @app.route('/<short_url>')
 def get_long_url(short_url):
@@ -113,10 +108,6 @@ def get_long_url(short_url):
     db.session.add(redirect_entry)
     db.session.commit()
     return redirect(ret, code=302)
-
-
-
-
 
 
 if __name__ == '__main__':
