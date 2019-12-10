@@ -1,12 +1,12 @@
 <template>
   <div class="stats">
-    <h3>Total redirects: {{ redirectedUrls['all_count'] }}</h3>
+    <h3>Total Successful redirects: {{ redirectedUrls['all_count'] }}</h3>
     <h3>Successful redirects from today: {{ redirectedUrls['all_good_today'] }}</h3>
-    <h3>Bad redirects from today: {{ redirectedUrls['all_bad_today'] }}</h3>
-    <h3>Good redirects from last hour: {{ redirectedUrls['all_good_hour'] }}</h3>
-    <h3>Bad redirects from last hour: {{ redirectedUrls['all_bad_hour'] }}</h3>
-    <h3>Good redirects from last minute: {{ redirectedUrls['all_good_minute'] }}</h3>
-    <h3>Bad redirects from last minute: {{ redirectedUrls['all_bad_minute'] }}</h3>
+    <h3>Not vaild redirects from today: {{ redirectedUrls['all_bad_today'] }}</h3>
+    <h3>Successful redirects from last hour: {{ redirectedUrls['all_good_hour'] }}</h3>
+    <h3>Not vaild redirects from last hour: {{ redirectedUrls['all_bad_hour'] }}</h3>
+    <h3>Successful redirects from last minute: {{ redirectedUrls['all_good_minute'] }}</h3>
+    <h3>Not vaild redirects from last minute: {{ redirectedUrls['all_bad_minute'] }}</h3>
   </div>
 </template>
 

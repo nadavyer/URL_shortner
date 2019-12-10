@@ -44,7 +44,7 @@ class Submmit:
 class Query:
 
     @staticmethod
-    def count_all_directories(db):
+    def count_all_redirects(db):
         return db.session.query(func.count(Redirects.stat)).filter(Redirects.stat == 'good').scalar()
 
     @staticmethod

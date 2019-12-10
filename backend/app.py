@@ -48,9 +48,9 @@ def shorten_url():
 @app.route('/api/stats', methods = ['GET'])
 def send_stats_from_db():
     statistics = {
-        "all_count": Query.count_all_directories(db),
+        "all_count": Query.count_all_redirects(db),
         "all_good_today": Query.get_all_good_redirects_from_today(db),
-         "all_good_today": Query.count_all_bad_redirects_from_today(db),
+         "all_bad_today": Query.count_all_bad_redirects_from_today(db),
          "all_good_hour": Query.get_all_good_redirects_from_hour(db), 
          "all_bad_hour": Query.get_all_bad_redirects_from_hour(db), 
          "all_good_minute": Query.get_all_good_redirects_from_minute(db), 
